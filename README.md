@@ -222,10 +222,9 @@ If you use KAIROS in your research, please cite:
 
 ```bibtex
 @article{kairos_mas,
-  title={LLMs Can’t Handle Peer Pressure: Crumbling under Multi-Agent Social
-Interactions},
+  title={LLMs Can’t Handle Peer Pressure: Crumbling under Multi-Agent Social Interactions},
   author={Maojia Song, Tej Deep Pala, Weisheng Jin, Amir Zadeh, Chuan Li, Dorien Herremans, Soujanya Poria},
   year={2025},
-  url={https://github.com/your-repo/KAIROS}
+  url={https://github.com/declare-lab/KAIROS}
 }
 ```
