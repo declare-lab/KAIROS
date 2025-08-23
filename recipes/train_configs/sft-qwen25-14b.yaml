@@ -1,0 +1,63 @@
+# Model arguments
+# model_init_kwargs:
+model_name_or_path: Qwen/Qwen2.5-14B-Instruct # change this
+model_revision: main
+torch_dtype: bfloat16
+trust_remote_code: true
+attn_implementation: flash_attention_2  #sdpa
+# use_peft: True
+
+# Data training arguments
+dataset_mixer:
+  "data/final_train_dict_SFT": 1.0 # change this
+dataset_splits:
+  - train
+  - test
+truncation_side: "left"
+padding_side: "left"
+wandb_project: "MAS"
+
+# GRPO trainer config
+# Output and Run Configuration
+output_dir: /home/ubuntu/mj/MAS/saved/sft-qwen25-14b # change this
+overwrite_output_dir: true
+run_name: sft-qwen25-14b #change this
+report_to:
+  - "wandb"
+save_strategy: "steps"
+save_steps: 10
+save_only_model: true
+save_total_limit: 10
+# resume_from_checkpoint: true
+
+# Training Configuration
+packing: true
+max_length: 1024
+num_train_epochs: 1
+max_steps: -1
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 1
+learning_rate: 2.0e-05
+optim: adamw_torch
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+max_grad_norm: 1.0
+seed: 42
+bf16: true
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+completion_only_loss: true
+
+# Evaluation Configuration
+eval_packing: true
+per_device_eval_batch_size: 16
+eval_strategy: "steps"
+eval_steps: 10
+# eval_on_start: true
+
+# Logging Configuration
+logging_first_step: true
+log_level: info
+logging_steps: 5
+logging_strategy: steps
