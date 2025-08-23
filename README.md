@@ -40,6 +40,13 @@ AZURE_OPENAI_ENDPOINT=your_azure_endpoint
 WANDB_API_KEY=your_wandb_api_key
 ```
 
+
+## 📚 Dataset
+
+This dataset contains question-answering tasks in multi-agent social interaction scenarios, supporting evaluation of trust, peer influence, robustness to misinformation, and more. For detailed data format and usage instructions, please refer to the [KAIROS_EVAL repository](https://huggingface.co/datasets/declare-lab/KAIROS_EVAL).
+
+
+
 ## 🎯 Training
 
 ### Supervised Fine-tuning (SFT) & Group Relative Policy Optimization (GRPO)
