@@ -43,7 +43,7 @@ WANDB_API_KEY=your_wandb_api_key
 
 ## 📚 Dataset
 
-This dataset contains question-answering tasks in multi-agent social interaction scenarios, supporting evaluation of trust, peer influence, robustness to misinformation, and more. For detailed data format and usage instructions, please refer to the [KAIROS_EVAL repository](https://huggingface.co/datasets/declare-lab/KAIROS_EVAL).
+This dataset contains question-answering tasks in multi-agent social interaction scenarios, supporting evaluation of trust, peer influence, robustness to misinformation, and more. For detailed data format and usage instructions, please refer to the [KAIROS_EVAL](https://huggingface.co/datasets/declare-lab/KAIROS_EVAL).
 
 
 
@@ -221,10 +221,13 @@ KAIROS/
 If you use KAIROS in your research, please cite:
 
 ```bibtex
-@article{kairos_mas,
-  title={LLMs Can’t Handle Peer Pressure: Crumbling under Multi-Agent Social Interactions},
-  author={Maojia Song, Tej Deep Pala, Weisheng Jin, Amir Zadeh, Chuan Li, Dorien Herremans, Soujanya Poria},
-  year={2025},
-  url={https://github.com/declare-lab/KAIROS}
+@misc{song2025llmscanthandlepeer,
+      title={LLMs Can't Handle Peer Pressure: Crumbling under Multi-Agent Social Interactions}, 
+      author={Maojia Song and Tej Deep Pala and Weisheng Jin and Amir Zadeh and Chuan Li and Dorien Herremans and Soujanya Poria},
+      year={2025},
+      eprint={2508.18321},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2508.18321}, 
 }
 ```
