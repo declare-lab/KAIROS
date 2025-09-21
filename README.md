@@ -214,20 +214,3 @@ KAIROS/
 ├── requirements.txt           # Python dependencies
 └── setup.py                   # Package setup
 ```
-
-
-## 📝 Citation
-
-If you use KAIROS in your research, please cite:
-
-```bibtex
-@misc{song2025llmscanthandlepeer,
-      title={LLMs Can't Handle Peer Pressure: Crumbling under Multi-Agent Social Interactions}, 
-      author={Maojia Song and Tej Deep Pala and Weisheng Jin and Amir Zadeh and Chuan Li and Dorien Herremans and Soujanya Poria},
-      year={2025},
-      eprint={2508.18321},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2508.18321}, 
-}
-```
