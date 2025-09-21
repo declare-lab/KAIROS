@@ -185,9 +185,9 @@ Based on the internal debate, the answer is...
 
 The system supports various model configurations:
 - **MAS vs Non-MAS**: With or without multi-agent debate
-- **DS vs NS**: Different sampling strategies (Diverse Sampling vs Normal Sampling)
-- **DR vs OR**: Different reward functions (Debate Reward vs Original Reward)
-- **LConf vs LCorr**: Confidence-based vs Correctness-based learning
+- **DS vs NS**: Different system prompt (Debate Prompt vs Normal Prompt)
+- **DR vs OR**: Different reward functions (Debate Reward vs Outcome Reward)
+- **LConf vs LCorr**: Low Confidence-based vs Low Correctness-based learning
 
 ### Training Types
 

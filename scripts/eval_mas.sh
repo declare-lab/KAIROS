@@ -1,18 +1,26 @@
 #!/bin/bash
 # This script evaluates the MAS model on the test set.
-export MAX_WORKERS_NUM=60
+export MAX_WORKERS_NUM=10
 
 MODELS=(
-    saved/Qwen2.5-3B-Instruct
+    # /cpfs01/mj/eval_models/Qwen2.5-32B-Instruct
+    # /cpfs01/mj/eval_models/Qwen2.5-72B-Instruct
+    # "gpt-5-2025-08-07"
+    # "gemini-2.5-pro"
+    # /cpfs01/mj/eval_models/Llama-3.3-70B-Instruct
+    # /cpfs01/zileq/models/openai/gpt-oss-120b
+    /cpfs01/zhuochen.zc/models/ZhipuAI/GLM-4___5
 )
 IPS=(
     "0.0.0.0" 
+    "0.0.0.0"
 )
 PORT_NUMBERS=(
     "9090"
+    "9091"
 )
 MODE="reflection"  # mode can empowered or reflection
-TAG="xxxx"  # dont use - or _ in tag
+TAG="0917"  # dont use - or _ in tag
 SAVE_ROOT="mas_eval"
 LOG_FILE="${SAVE_ROOT}/EVAL_${TAG}-${MODE}.log"
 

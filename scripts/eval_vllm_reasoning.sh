@@ -1,23 +1,17 @@
 # Start vllm server
 MODELS=(
-    # /cpfs01/mj/eval_models/Qwen2.5-32B-Instruct
-    # /cpfs01/mj/eval_models/Qwen2.5-72B-Instruct
-    /cpfs01/mj/eval_models/Llama-3.3-70B-Instruct
-    /cpfs01/zileq/models/openai/gpt-oss-120b
+    /cpfs01/zhuochen.zc/models/ZhipuAI/GLM-4___5
 )
 IPS=(
     "0.0.0.0" 
-    "0.0.0.0"
 )
 PORT_NUMBERS=(
-    "9090"
-    "9091"
+    "9090"     
 )
 CUDA_DEVICES=(
-    "0,1"
-    "2,3"
+    "0,1,2,3,4,5,6,7"
 )
-MAX_LENGTH=4096
+MAX_LENGTH=16384 # 8192
 
 for i in ${!MODELS[@]}; do
     CUDA_VISIBLE_DEVICES="${CUDA_DEVICES[$i]}" vllm serve \
@@ -27,5 +21,6 @@ for i in ${!MODELS[@]}; do
         --tensor-parallel-size $(echo ${CUDA_DEVICES[$i]} | tr -cd ',' | wc -c | xargs -I {} expr {} + 1) \
         --gpu-memory-utilization 0.8 \
         --max-model-len ${MAX_LENGTH} \
+        --reasoning-parser glm45 \
         --dtype bfloat16 &
 done

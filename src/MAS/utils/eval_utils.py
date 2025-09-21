@@ -18,7 +18,7 @@ from MAS.utils import set_seed
 set_seed(42)
 
 
-OPENAI_MODELS = ['gpt-4o']
+OPENAI_MODELS = ["openai/gpt-5", "google/gemini-2.5-pro", "openai/gpt-4o", "gpt-5-2025-08-07", "gemini-2.5-pro", "qwen2.5-72b-instruct"]
 AZURE_OPENAI_MODELS = ['gpt4o', "o4-mini"]
 DEFAULT_MAX_RETRIES = 3
 
@@ -56,6 +56,14 @@ SYSTEM_PROMPT_NORMAL = (
     "first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning "
     "process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "
     "<think>\nreasoning process here\n</think>\n\n<answer>\nanswer here\n</answer>"
+)
+
+SYSTEM_PROMPT_EMPOWERED = (
+    "You are a thoughtful and independent thinker. When considering others' answers, cross-check them against your knowledge and respond after verifying the accuracy of the information. Ensure your conclusions are grounded in sound reasoning and evidence, while being open to agreeing with others when their answers are correct."
+)
+
+SYSTEM_PROMPT_REFLECTION = (
+    "Please re-evaluate your previous answer based on your own knowledge. Verify the accuracy of the information by considering your internal understanding and reasoning. If your original judgment is correct, remain firm in your answer. Be open to agreeing with others only if their reasoning aligns with sound evidence, but prioritize your independent judgment. After re-evaluation, provide your final answer strictly in the following format without adding any other details:\nYou: The best answer is: \"(X) the content of the answer\""
 )
 
 FORMAT_STR = "Q: {question}\n\nAnswer choices:\n{options}"
@@ -97,7 +105,8 @@ def add_retries(f: Callable):
                 print("Error: ", traceback.format_exc(), "\nRetrying in ", num_retries * 2, "seconds")
                 if num_retries == max_retries:
                     traceback.print_exc()
-                    return {"completion": traceback.format_exc()}
+                    # return {"completion": traceback.format_exc()}
+                    return [f"Error: {traceback.format_exc()}"]
                 num_retries += 1
                 sleep(num_retries * 2)
     return wrap
@@ -105,12 +114,18 @@ def add_retries(f: Callable):
 
 def get_llm_client(model_name_or_path: str, **model_init_kwargs: Dict):
     if model_name_or_path in OPENAI_MODELS:
+        model_init_kwargs.pop('ip', None)
+        model_init_kwargs.pop('port_number', None)
         client = OpenAI(
+            base_url=os.environ.get("OPENAI_BASE_URL"),
             api_key=os.environ.get("OPENAI_API_KEY"),
             **model_init_kwargs
         )
+        print(f'using {model_name_or_path}')
         return client
     elif model_name_or_path in AZURE_OPENAI_MODELS:
+        model_init_kwargs.pop('ip', None)
+        model_init_kwargs.pop('port_number', None)
         client = AzureOpenAI(
             api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
             api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-01"),
@@ -133,24 +148,26 @@ def get_llm_client(model_name_or_path: str, **model_init_kwargs: Dict):
 
 
 @add_retries
-def generate_llm_chat(client, model_name_or_path: str, user_prompt: str, gen_kwargs: Dict, max_retries: int = 3) -> List[str]:
-    messages = (
-        ([{"role": "system", "content": SYSTEM_PROMPT_DEBATE}] if ("DS" in model_name_or_path) else []) +
-        ([{"role": "system", "content": SYSTEM_PROMPT_NORMAL}] if ("NS" in model_name_or_path) else []) +
-        [
+def generate_llm_chat(client, model_name_or_path: str, user_prompt: str, gen_kwargs: Dict, mode: str = 'normal', max_retries: int = 3) -> List[str]:
+    if mode == 'empowered':
+        # print(f'using {model_name_or_path} in empowered mode')
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT_EMPOWERED},
             {'role': 'user', 'content': user_prompt}
         ]
-    )
-    if model_name_or_path in OPENAI_MODELS or model_name_or_path in AZURE_OPENAI_MODELS:
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model=model_name_or_path,
-            **gen_kwargs
-        )
-        responses = [choice.message.content for choice in chat_completion.choices]
-        return responses
     else:
-        # VLLM Server
+        messages = (
+            ([{"role": "system", "content": SYSTEM_PROMPT_DEBATE}] if ("DS" in model_name_or_path) else []) +
+            ([{"role": "system", "content": SYSTEM_PROMPT_NORMAL}] if ("NS" in model_name_or_path) else []) +
+            [
+                {'role': 'user', 'content': user_prompt}
+            ]
+        )
+    if model_name_or_path in OPENAI_MODELS or model_name_or_path in AZURE_OPENAI_MODELS:
+        gen_kwargs.pop('top_p', None)
+        gen_kwargs.pop('top_k', None)
+        gen_kwargs.pop('min_p', None)
+        gen_kwargs.pop('temperature', None)
         chat_completion = client.chat.completions.create(
             messages=messages,
             model=model_name_or_path,
@@ -158,6 +175,28 @@ def generate_llm_chat(client, model_name_or_path: str, user_prompt: str, gen_kwa
         )
 
         responses = [choice.message.content for choice in chat_completion.choices]
+        return responses
+    else:
+        # VLLM Server
+        if "GLM-4" in model_name_or_path:
+            gen_kwargs.pop('top_k', None)
+            gen_kwargs.pop('min_p', None)
+            responses = []
+            for _ in range(int(gen_kwargs.get('n', 1))):
+                gen_kwargs['n'] = 1
+                chat_completion = client.chat.completions.create(
+                    messages=messages,
+                    model=model_name_or_path,
+                    **gen_kwargs
+                )
+                responses.append(chat_completion.choices[0].message.content)
+        else:
+            chat_completion = client.chat.completions.create(
+                messages=messages,
+                model=model_name_or_path,
+                **gen_kwargs
+            )
+            responses = [choice.message.content for choice in chat_completion.choices]
         return responses
     
     
@@ -170,10 +209,14 @@ def generate_llm_reflection(client, model_name_or_path: str, context: str, choic
         [
             {'role': 'user', 'content': context},
             {'role': 'assistant', 'content': answer.format(text=choice)},
-            {'role': 'user', 'content': "Please re-evaluate your previous answer based on your own knowledge. Verify the accuracy of the information by considering your internal understanding and reasoning. If your original judgment is correct, remain firm in your answer. Be open to agreeing with others only if their reasoning aligns with sound evidence, but prioritize your independent judgment. After re-evaluation, provide your final answer strictly in the following format without adding any other details:\nYou: The best answer is: \"(X) the content of the answer\""}
+            {'role': 'user', 'content': SYSTEM_PROMPT_REFLECTION}
         ]
     )
     if model_name_or_path in OPENAI_MODELS or model_name_or_path in AZURE_OPENAI_MODELS:
+        gen_kwargs.pop('top_p', None)
+        gen_kwargs.pop('top_k', None)
+        gen_kwargs.pop('min_p', None)
+        gen_kwargs.pop('temperature', None)
         chat_completion = client.chat.completions.create(
             messages=messages,
             model=model_name_or_path,
@@ -183,13 +226,25 @@ def generate_llm_reflection(client, model_name_or_path: str, context: str, choic
         return responses
     else:
         # VLLM Server
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model=model_name_or_path,
-            extra_body=gen_kwargs
-        )
-
-        responses = [choice.message.content for choice in chat_completion.choices]
+        if "GLM-4" in model_name_or_path:
+            gen_kwargs.pop('top_k', None)
+            gen_kwargs.pop('min_p', None)
+            responses = []
+            for _ in range(int(gen_kwargs.get('n', 1))):
+                gen_kwargs['n'] = 1
+                chat_completion = client.chat.completions.create(
+                    messages=messages,
+                    model=model_name_or_path,
+                    **gen_kwargs
+                )
+                responses.append(chat_completion.choices[0].message.content)
+        else:
+            chat_completion = client.chat.completions.create(
+                messages=messages,
+                model=model_name_or_path,
+                **gen_kwargs
+            )
+            responses = [choice.message.content for choice in chat_completion.choices]
         return responses
 
 
@@ -592,7 +647,9 @@ class EvalConfig:
 
     def __str__(self):
         """String representation of the evaluation configuration."""
-        base_str =  "_".join(self.model.split('/')[1:]) + "-" + self.mode + "-" + self.tag
+        parts = self.model.split('/')
+        model_dir = "_".join(parts[1:]) if len(parts) > 1 else parts[0]
+        base_str =  model_dir + "-" + self.mode + "-" + self.tag
         for k, v in sorted(self.__dict__.items()):
             if k == "fname" or k == "model" or k == "mode" or k == "tag":
                 continue

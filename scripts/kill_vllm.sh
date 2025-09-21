@@ -6,7 +6,7 @@
 PROCESS_PATTERNS=(
     "from multiprocessing.spawn import spawn_main"
     "vllm.entrypoints.openai.api_server"
-    "eval_mas"
+    # "eval_mas"
     "trl vllm-serve"
 )
 

@@ -11,7 +11,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from string import ascii_uppercase
 from time import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from datasets import Dataset, load_from_disk
 from scipy.stats import entropy
@@ -24,11 +24,13 @@ from MAS.utils.eval_utils import (CONFIDENCE_PROTOCOLS, PROMPT_TEMPLATE,
                                   generate_llm_chat, generate_llm_reflection,
                                   get_llm_client, get_option_content)
 from MAS.utils.logging_utils import setup_logger
+from dotenv import load_dotenv
 
 # Set up logging
 logger = setup_logger()
 # Set seed for reproducibility
 set_seed(42)
+load_dotenv()
 
 N_AGENTS = 6
 MAX_WORKERS = int(os.environ.get('MAX_WORKERS_NUM', 4))  # Default max workers for thread pool
@@ -50,7 +52,9 @@ class EvalManager:
         self.temperature = args.temperature
 
     def save_results(self, config: EvalConfig, outputs: Dict, acc: int, failed_idx: set):
-        results_path = os.path.join(self.save_root, "_".join(config.model.split('/')[1:]), config.fname)
+        parts = config.model.split('/')
+        model_dir = "_".join(parts[1:]) if len(parts) > 1 else parts[0]
+        results_path = os.path.join(self.save_root, model_dir, config.fname)
         try:
             with open(results_path, 'w', encoding="utf-8") as f:
                 json.dump({
@@ -157,6 +161,7 @@ class EvalManager:
                 "min_p": 0.02,
                 "seed": 42,
             },
+            self.mode,
             max_retries=3
         )
         
@@ -265,7 +270,9 @@ class EvalManager:
         
         all_raw_results = []
         for raw_cfg in raw_configs:
-            cache_path = os.path.join(self.save_root, "_".join(raw_cfg.model.split('/')[1:]), raw_cfg.fname)
+            parts = raw_cfg.model.split('/')
+            model_dir = "_".join(parts[1:]) if len(parts) > 1 else parts[0]
+            cache_path = os.path.join(self.save_root, model_dir, raw_cfg.fname)
             
             if os.path.exists(cache_path):
                 logger.info(f"Skipping {raw_cfg.model} because it already exists")
@@ -350,7 +357,9 @@ class EvalManager:
             logger.info('\n\n\nNew config')
             logger.info(config.__dict__)
 
-            cache_path = os.path.join(self.save_root, "_".join(config.model.split('/')[1:]), config.fname)
+            parts = config.model.split('/')
+            model_dir = "_".join(parts[1:]) if len(parts) > 1 else parts[0]
+            cache_path = os.path.join(self.save_root, model_dir, config.fname)
             if os.path.exists(cache_path):
                 logger.info(f"Skipping {config.model} because it already exists")
                 try:

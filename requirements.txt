@@ -7,14 +7,14 @@ pandas
 peft
 nltk
 python-dotenv
-trl[vllm]==0.17.0
-torch==2.6.0
+# trl[vllm]==0.17.0
+# torch==2.6.0
 transformers
 qwen-vl-utils
 tiktoken
 xformers
 bitsandbytes
-vllm==0.8.4
+# vllm==0.8.4
 ultralytics
 FlagEmbedding
 colorlog
